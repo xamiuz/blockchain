@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Data</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { font-weight: bold; }
+        .data { font-size: 1.2em; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Employee Information</h1>
+    <p><strong>Employee ID:</strong> {{ employee.EmpID }}</p>
+    <p><strong>First Name:</strong> {{ employee.FirstName }}</p>
+    <p><strong>Last Name:</strong> {{ employee.LastName }}</p>
+    <p><strong>Job Title:</strong> {{ employee.JobTitle }}</p>
+    <p><strong>Performance Score:</strong> {{ employee.PerformanceScore }}</p>
+</div>
+</body>
+</html>

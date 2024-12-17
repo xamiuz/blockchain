@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Blockchain</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { font-weight: bold; }
+        input[type="text"], input[type="submit"] { width: 100%; padding: 10px; }
+        input[type="submit"] { background-color: #4CAF50; color: white; cursor: pointer; }
+        input[type="submit"]:hover { background-color: #45a049; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Welcome to Employee Blockchain</h1>
+    <p>Masukkan Private Key Anda secara manual (lihat di CSV).</p>
+    <form action="/get_employee_by_key" method="POST">
+        <div class="form-group">
+            <label for="private_key">Private Key</label>
+            <input type="text" id="private_key" name="private_key" placeholder="Enter your private key" required>
+        </div>
+        <input type="submit" value="Submit">
+    </form>
+</div>
+</body>
+</html>

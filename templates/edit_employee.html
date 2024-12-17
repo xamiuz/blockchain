@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Employee</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: #f4f4f9;
+            color: #333;
+            line-height: 1.6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 0 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: #fff;
+            padding: 2rem;
+            margin: 1rem;
+            border-radius: 10px;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: #444;
+            font-weight: 600;
+            font-size: 1.8rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #555;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 0.8rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            border-color: #6c63ff;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: 0.9rem;
+            font-size: 1.1rem;
+            color: #fff;
+            background-color: #6c63ff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #5a52e0;
+        }
+
+        #downloadButton {
+            margin-top: 1.5rem;
+            display: none;
+            background-color: #28a745;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .button-container button {
+            width: 48%;
+        }
+
+        .alert {
+            background-color: #4caf50;
+            color: white;
+            padding: 1rem;
+            margin-top: 1rem;
+            text-align: center;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .alert-error {
+            background-color: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Edit Employee Data</h1>
+        <form id="updateForm">
+            <label for="emp_id">Employee ID:</label>
+            <input type="number" id="emp_id" name="emp_id" value="{{ employee['EmpID'] }}" required>
+
+            <label for="first_name">First Name:</label>
+            <input type="text" id="first_name" name="first_name" value="{{ employee['FirstName'] }}" required>
+
+            <label for="last_name">Last Name:</label>
+            <input type="text" id="last_name" name="last_name" value="{{ employee['LastName'] }}" required>
+
+            <label for="job_title">Job Title:</label>
+            <input type="text" id="job_title" name="job_title" value="{{ employee['JobTitle'] }}" required>
+
+            <label for="performance_score">Performance Score:</label>
+            <input type="number" id="performance_score" name="performance_score" value="{{ employee['PerformanceScore'] }}" required>
+
+            <div class="button-container">
+                <button type="button" id="updateButton">Update Employee</button>
+                <button type="button" id="seeUpdatedButton">See Updated CSV</button>
+            </div>
+        </form>
+        <div id="downloadButton" class="button-container">
+            <button onclick="window.location.href='/download_updated_csv';">Download Updated CSV</button>
+        </div>
+        <div id="alertMessage" class="alert"></div>
+    </div>
+
+    <script>
+        let web3;
+        let contract;
+        const employeeAddress = "{{ employee_address }}";
+        const contractAddress = "0xc4d78C04dF137BCf96cB3523633CEBEb2DDb290f";
+        const contractABI = [
+            {
+                "inputs": [
+                    { "internalType": "address", "name": "_employeeAddress", "type": "address" },
+                    { "internalType": "string", "name": "_firstName", "type": "string" },
+                    { "internalType": "string", "name": "_lastName", "type": "string" },
+                    { "internalType": "string", "name": "_jobTitle", "type": "string" },
+                    { "internalType": "uint256", "name": "_performanceScore", "type": "uint256" }
+                ],
+                "name": "updateEmployee",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            }
+        ];
+
+        async function connectMetaMask() {
+            if (window.ethereum) {
+                web3 = new Web3(window.ethereum);
+                await window.ethereum.request({ method: "eth_requestAccounts" });
+                console.log("MetaMask connected");
+            } else {
+                alert("MetaMask is not installed.");
+            }
+        }
+
+        async function initContract() {
+            await connectMetaMask();
+            contract = new web3.eth.Contract(contractABI, contractAddress);
+            console.log("Contract initialized", contract);
+        }
+
+        async function updateEmployee() {
+            const accounts = await web3.eth.getAccounts();
+            const account = accounts[0];
+
+            const empId = document.getElementById("emp_id").value;
+            const firstName = document.getElementById("first_name").value;
+            const lastName = document.getElementById("last_name").value;
+            const jobTitle = document.getElementById("job_title").value;
+            const performanceScore = document.getElementById("performance_score").value;
+
+            try {
+                console.log("Updating employee...");
+                const tx = await contract.methods.updateEmployee(
+                    employeeAddress,
+                    firstName,
+                    lastName,
+                    jobTitle,
+                    performanceScore
+                ).send({ from: account });
+
+                console.log("Transaction successful:", tx);
+                showAlert("Employee data updated successfully!", "success");
+
+                // Show the download button
+                document.getElementById("downloadButton").style.display = "flex";
+            } catch (error) {
+                console.error("Error updating employee:", error);
+                showAlert("Failed to update employee.", "error");
+            }
+
+            await fetch("/update_csv", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    first_name: firstName,
+                    last_name: lastName,
+                    job_title: jobTitle,
+                    performance_score: performanceScore,
+                    emp_id: empId // Add emp_id here
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("CSV file updated successfully!");
+                    document.getElementById("downloadButton").style.display = "block";
+                } else {
+                    alert("Failed to update CSV file.");
+                }
+            })
+            .catch(error => {
+                console.error("Error updating CSV:", error);
+            });
+        }
+
+        function seeUpdatedCSV() {
+            fetch("/see_updated_csv", {
+                method: "GET",
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Updated CSV file created successfully in the workspace!");
+                    window.location.href = "/download_updated_csv"; // Redirect to a new route for downloading
+                } else {
+                    alert("Failed to create updated CSV file.");
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("An error occurred while creating the updated CSV file.");
+            });
+        }
+
+        function showAlert(message, type) {
+            const alertMessage = document.getElementById("alertMessage");
+            alertMessage.innerHTML = message;
+            alertMessage.className = "alert " + (type === "success" ? "" : "alert-error");
+            alertMessage.style.display = "block";
+
+            setTimeout(() => {
+                alertMessage.style.display = "none";
+            }, 5000);
+        }
+
+        document.getElementById("updateButton").addEventListener("click", updateEmployee);
+        document.getElementById("seeUpdatedButton").addEventListener("click", seeUpdatedCSV);
+
+        window.addEventListener("load", initContract);
+    </script>
+</body>
+</html>
